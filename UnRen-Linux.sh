@@ -2,7 +2,8 @@
 # --------------------------------------------------------------------------------
 # Unren.bat Windows + UnRen-Ultrahack to Linux conversion
 # --------------------------------------------------------------------------------
-
+version=1.0.9.9.1
+versiondate="(221006)"
 
 # --------------------------------------------------------------------------------
 # START LICENSES
@@ -131,8 +132,6 @@ rpatool01=IyEvdXNyL2Jpbi9lbnYgcHl0aG9uDQpmcm9tIF9fZnV0dXJlX18gaW1wb3J0IHByaW50X2
 # DO NOT EDIT BELOW THIS LINE
 # --------------------------------------------------------------------------------
 PROMPT_COMMAND=
-version=1.0.9.9
-versiondate="(221005)"
 echo -en "\033]0;UnRen.bat ${version}\a"
 
 # --------------------------------------------------------------------------------
@@ -166,12 +165,12 @@ fi
 
 if [ ! -f "${pythondir}/python" ]
 then
-    pythondir=${currentdir}"/../lib/linux-x86_64"
+    pythondir=${currentdir}"/../lib/linux-i686"
     gamedir=${currentdir}
 
 	if [ -d "${currentdir}/game" ] && [ -d "${currentdir}/lib" ] && [ -d "${currentdir}/renpy" ]
     then
-        pythondir="${currentdir}/lib/linux-x86_64"
+        pythondir="${currentdir}/lib/linux-i686"
         gamedir=${currentdir}"/game"
     fi
 fi
@@ -235,7 +234,7 @@ then
 	exit
 fi
 
-gamename="$(find . -maxdepth 1 -name '*.sh' ! -iname 'UnRen-Linux-'${version}'.sh' | sed -e 's/.sh$//' -e 's/\.\///')"
+gamename="$(find . -maxdepth 1 -name '*.sh' ! -iname 'UnRen-Linux.sh' | sed -e 's/.sh$//' -e 's/\.\///')"
 
 chmod +x "${gamename}.sh"
 cd "${pythondir}" || exit
@@ -329,30 +328,36 @@ function extract()
     echo "  Searching for RPA packages"
     cd "${gamedir}" || exit
     
-    # shellcheck disable=SC2034  # set PYTHONPATH, unused variable
-    PYTHONPATH=${pythondir}
+    export PYTHONPATH=$PYTHONPATH:${pythondir}
     chmod +x "${pythondir}/python"
-    for file in *.rpa
-    do
-        stat -c "Unpacking %n - %s bytes " "${file}"
-        runCommand=${pythondir}'/python '${rpatool}' '${file} > /dev/null
-        if [ "${renamerpa}" == "y" ]
-        then
-            echo "     RPA files renamed."
-            ${runCommand}
-            mv "${file}" "${file}.bak"
-        else
-            echo "     RPA files not renamed."
-            ${runCommand}
-        fi
-    done
+
+    if compgen -G "*.rpa" > /dev/null; then
+        for file in *.rpa
+        do
+            stat -c "Unpacking %n - %s bytes " "${file}"
+            runCommand=${pythondir}'/python '${rpatool}' '${file} > /dev/null
+            if [ "${renamerpa}" == "y" ]
+            then
+                echo "     RPA files renamed."
+                ${runCommand}
+                mv "${file}" "${file}.bak"
+            else
+                echo "     RPA files not renamed."
+                ${runCommand}
+            fi
+        done
+    else
+        echo "     No RPA files found."
+    fi
 
     # --------------------------------------------------------------------------------
     # Clean up
     # --------------------------------------------------------------------------------
     echo "  Cleaning up ..."
+
     rm "${rpatool}.tmp" 2> /dev/null
     rm "${rpatool}" 2> /dev/null
+
     echo " "
     if [ "${option}" == "8" ] || [ "${option}" == "9" ]
     then
