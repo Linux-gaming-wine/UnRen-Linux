@@ -354,8 +354,10 @@ function extract()
     # Clean up
     # --------------------------------------------------------------------------------
     echo "  Cleaning up ..."
+
     rm "${rpatool}.tmp" 2> /dev/null
     rm "${rpatool}" 2> /dev/null
+
     echo " "
     if [ "${option}" == "8" ] || [ "${option}" == "9" ]
     then
